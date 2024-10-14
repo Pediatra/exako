@@ -1,9 +1,11 @@
-from fastapi_users.authentication import AuthenticationBackend, BearerTransport
-from fastapi_users.authentication import CookieTransport
-from fastapi_users.authentication import JWTStrategy
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    CookieTransport,
+    JWTStrategy,
+)
 
 from exako.settings import settings
-
 
 bearer_transport = BearerTransport(tokenUrl='auth/jwt/login')
 cookie_transport = CookieTransport(

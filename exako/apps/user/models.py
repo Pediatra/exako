@@ -1,15 +1,14 @@
-
+from fastapi import Depends
 from fastapi_users import BaseUserManager, IntegerIDMixin
 from fastapi_users.db import BaseUserDatabase
-from tortoise import models, fields
+from tortoise import fields, models
 from tortoise.exceptions import DoesNotExist
-from fastapi import Depends
 
 
 class User(models.Model):
     id = fields.IntField(pk=True)
-    email: str = fields.CharField(index=True, unique=True, null=False, max_length=255)
-    hashed_password: str = fields.CharField(null=False, max_length=1024)
+    email = fields.CharField(index=True, unique=True, null=False, max_length=255)
+    hashed_password = fields.CharField(null=False, max_length=1024)
     is_active = fields.BooleanField(default=True, null=False)
     is_superuser = fields.BooleanField(default=False, null=False)
     is_verified = fields.BooleanField(default=False, null=False)
@@ -19,7 +18,7 @@ class User(models.Model):
     modified_at = fields.DatetimeField(auto_now=True)
 
 
-class UserDatabase( BaseUserDatabase):
+class UserDatabase(BaseUserDatabase):
     def __init__(
         self,
         user_model: User,

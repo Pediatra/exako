@@ -1,5 +1,6 @@
 from enum import Enum
-import gettext as _
+
+from exako.apps.core.i18n import _
 
 
 class ExerciseType(int, Enum):

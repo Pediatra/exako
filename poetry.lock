@@ -1269,6 +1269,17 @@ argon2 = ["argon2-cffi (==23.1.0)"]
 bcrypt = ["bcrypt (==4.1.2)"]
 
 [[package]]
+name = "pybabel"
+version = "0.0.0.dev0"
+description = "The compiler for next generation Python."
+optional = false
+python-versions = "*"
+files = [
+    {file = "pybabel-0.0.0.dev0-py3-none-any.whl", hash = "sha256:deaa10e9b6c841a865f3698ec23fd77276bfc44efb3c602b4213e314ac712bf3"},
+    {file = "pybabel-0.0.0.dev0.tar.gz", hash = "sha256:166c7e42cc72c7decfefe5ae11b66fb2d59de95f459f47e2a2bc9075f91d3eaa"},
+]
+
+[[package]]
 name = "pycodestyle"
 version = "2.8.0"
 description = "Python style guide checker"
@@ -2097,4 +2108,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "611d4fab3f1b0efd0037323575c82065f8350fddb8048bd16fbc0ac053834197"
+content-hash = "cdc270636ea2680ff7916ae5e1007027e8a14155e212de00de1f9b2ab7ca3e7e"

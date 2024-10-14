@@ -1,8 +1,7 @@
 from functools import partial
 
-from tortoise.contrib.fastapi import RegisterTortoise
-
 from pydantic_settings import BaseSettings
+from tortoise.contrib.fastapi import RegisterTortoise
 
 
 class Settings(BaseSettings):
@@ -11,7 +10,7 @@ class Settings(BaseSettings):
     DATABASE_USER: str
     DATABASE_PASSWORD: str
     DATABASE_NAME: str
-    
+
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 

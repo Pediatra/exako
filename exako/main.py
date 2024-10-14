@@ -5,10 +5,11 @@ from fastapi import FastAPI
 from tortoise import Tortoise
 from tortoise.contrib.fastapi import RegisterTortoise
 
-from exako.apps.user.schema import UserCreate, UserRead
-from exako.apps.user.security import auth_jwt_backend, auth_cookie_backend
+from exako.apps.core.middleware import LanguageMiddleware
 from exako.apps.user.router import fastapi_users
-from exako.settings import register_orm, TORTOISE_MODULES, TORTOISE_CONNECTION
+from exako.apps.user.schema import UserCreate, UserRead
+from exako.apps.user.security import auth_cookie_backend, auth_jwt_backend
+from exako.settings import TORTOISE_CONNECTION, TORTOISE_MODULES, register_orm
 
 
 @asynccontextmanager
@@ -37,6 +38,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(LanguageMiddleware)
 
 app.include_router(
     fastapi_users.get_auth_router(auth_jwt_backend),

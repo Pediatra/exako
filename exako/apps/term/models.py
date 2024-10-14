@@ -15,13 +15,13 @@ class Term(models.Model):
 
 class TermLexical(models.Model):
     term = fields.ForeignKeyField('models.Term', on_delete=fields.CASCADE)
-    term_value = fields.ForeignKeyField(
+    term_content = fields.ForeignKeyField(
         'models.Term',
         null=True,
         on_delete=fields.CASCADE,
-        related_name='term_value',
+        related_name='term_lexicals_content',
     )
-    value = fields.CharField(max_length=256, null=True)
+    content = fields.CharField(max_length=256, null=True)
     type = fields.SmallIntField()
     additional_content = fields.JSONField(null=True)
 

@@ -1,4 +1,5 @@
 from fastapi_users import schemas
+
 from exako.apps.term.constants import Language
 
 

@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS "termimage" (
 );
 CREATE TABLE IF NOT EXISTS "termlexical" (
     "id" SERIAL NOT NULL PRIMARY KEY,
-    "value" VARCHAR(256),
+    "content" VARCHAR(256),
     "type" SMALLINT NOT NULL,
     "additional_content" JSONB,
     "term_id" INT NOT NULL REFERENCES "term" ("id") ON DELETE CASCADE,
-    "term_value_id" INT REFERENCES "term" ("id") ON DELETE CASCADE
+    "term_content_id" INT REFERENCES "term" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "termdefinition" (
     "id" SERIAL NOT NULL PRIMARY KEY,
@@ -70,8 +70,8 @@ CREATE TABLE IF NOT EXISTS "termpronunciation" (
     "id" SERIAL NOT NULL PRIMARY KEY,
     "phonetic" VARCHAR(256) NOT NULL,
     "audio_url" VARCHAR(256),
-    "term_id" INT  UNIQUE REFERENCES "term" ("id") ON DELETE CASCADE,
     "term_lexical_id" INT  UNIQUE REFERENCES "termlexical" ("id") ON DELETE CASCADE,
+    "term_id" INT  UNIQUE REFERENCES "term" ("id") ON DELETE CASCADE,
     "term_example_id" INT  UNIQUE REFERENCES "termexample" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "exercise" (
@@ -88,12 +88,12 @@ CREATE TABLE IF NOT EXISTS "exercise" (
     "term_pronunciation_id" INT REFERENCES "termpronunciation" ("id") ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS "user" (
+    "id" SERIAL NOT NULL PRIMARY KEY,
     "email" VARCHAR(255) NOT NULL UNIQUE,
     "hashed_password" VARCHAR(1024) NOT NULL,
     "is_active" BOOL NOT NULL  DEFAULT True,
     "is_superuser" BOOL NOT NULL  DEFAULT False,
     "is_verified" BOOL NOT NULL  DEFAULT False,
-    "id" SERIAL NOT NULL PRIMARY KEY,
     "name" VARCHAR(50),
     "native_language" VARCHAR(7) NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL  DEFAULT CURRENT_TIMESTAMP,
