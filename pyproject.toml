@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "exako"
+version = "0.1.0"
+description = ""
+authors = ["Gabriel"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["standard"], version = "^0.115.0"}
+tortoise-orm = {extras = ["accel", "asyncpg"], version = "^0.21.6"}
+pydantic-settings = "^2.5.2"
+fastapi-users = "^13.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+pytest-cov = "^5.0.0"
+taskipy = "^1.13.0"
+blue = "^0.9.1"
+ruff = "^0.6.9"
+isort = "^5.13.2"
+factory-boy = "^3.3.1"
+freezegun = "^1.5.1"
+aerich = "^0.7.2"
+
+[tool.ruff]
+exclude = [".venv", "migrations"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.isort]
+profile = "black"
+extend_skip = ["migrations"]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+addopts = '-p no:warnings'
+
+[tool.blue]
+extend-exclude = "(migrations/)"
+
+[tool.taskipy.tasks]
+lint = "ruff check . --fix && blue --check . --diff"
+format = "ruff format .  && isort ."
+run = "fastapi dev exako/main.py"
+pre_test = "task format"
+test = "pytest -s --cov=. -vv"
+post_test = "coverage html"
+
+[tool.aerich]
+tortoise_orm = "exako.settings.TORTOISE_ORM"
+location = "./migrations"
+src_folder = "./."
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
