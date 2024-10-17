@@ -1,5 +1,5 @@
-from exako.apps.core.enum import IntegerChoices, TextChoices
-from exako.apps.core.i18n import _
+from exako.core.enum import IntegerChoices, TextChoices
+from exako.core.i18n import _
 
 
 class Level(TextChoices):
@@ -59,6 +59,14 @@ class Language(TextChoices):
     FINNISH = 'fi', _('Finnish')
     CZECH = 'cs', _('Czech')
     HUNGARIAN = 'hu', _('Hungarian')
+
+
+class TermLexicalType(IntegerChoices):
+    SYNONYM = 0, _('Synonym')
+    ANTONYM = 1, _('Antonym')
+    INFLECTION = 2, _('Inflection')
+    IDIOM = 3, _('Idiom')
+    RHYME = 4, _('Rhyme')
 
 
 language_emoji_map: dict[Language, str] = {

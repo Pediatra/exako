@@ -1,129 +1,230 @@
-from tortoise import fields, models
-from tortoise.contrib.postgres.fields import ArrayField
+from sqlalchemy import (
+    ARRAY,
+    JSON,
+    BigInteger,
+    ForeignKey,
+    Index,
+    Integer,
+    SmallInteger,
+    String,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import Mapped, mapped_column
+
+from exako.database import table_registry
 
 
-class Term(models.Model):
-    expression = fields.CharField(max_length=256)
-    language = fields.CharField(max_length=7)
-    additional_content = fields.JSONField(null=True)
+@table_registry.mapped_as_dataclass
+class Term:
+    __tablename__ = 'term'
 
-    class Meta:
-        unique_together = (('expression', 'language'),)
-        indexes = (('expression', 'language'),)
-        ordering = ['expression']
-
-
-class TermLexical(models.Model):
-    term = fields.ForeignKeyField('models.Term', on_delete=fields.CASCADE)
-    term_content = fields.ForeignKeyField(
-        'models.Term',
-        null=True,
-        on_delete=fields.CASCADE,
-        related_name='term_lexicals_content',
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
     )
-    content = fields.CharField(max_length=256, null=True)
-    type = fields.SmallIntField()
-    additional_content = fields.JSONField(null=True)
+    content: Mapped[str] = mapped_column(String(256), nullable=False)
+    language: Mapped[str] = mapped_column(String(7), nullable=False)
+    additional_content: Mapped[dict] = mapped_column(JSON, nullable=True)
 
-
-class TermImage(models.Model):
-    term = fields.OneToOneField('models.Term', on_delete=fields.CASCADE)
-    image_url = fields.CharField(max_length=256)
-
-
-class TermExample(models.Model):
-    language = fields.CharField(max_length=7)
-    content = fields.CharField(max_length=256)
-    level = fields.CharField(max_length=2, null=True)
-    additional_content = fields.JSONField(null=True)
-
-    class Meta:
-        ordering = ['content']
-
-
-class TermExampleTranslation(models.Model):
-    language = fields.CharField(max_length=7)
-    translation = fields.CharField(max_length=256)
-    term_example = fields.ForeignKeyField(
-        'models.TermExample',
-        on_delete=fields.CASCADE,
-    )
-
-    class Meta:
-        unique_together = (('language', 'term_example'),)
-
-
-class TermDefinition(models.Model):
-    part_of_speech = fields.SmallIntField()
-    content = fields.CharField(max_length=712)
-    level = fields.CharField(max_length=2, null=True)
-    term = fields.ForeignKeyField('models.Term', on_delete=fields.CASCADE)
-    term_lexical = fields.ForeignKeyField(
-        'models.TermLexical',
-        on_delete=fields.CASCADE,
-        null=True,
-    )
-    additional_content = fields.JSONField(null=True)
-
-
-class TermDefinitionTranslation(models.Model):
-    language = fields.CharField(max_length=2)
-    translation = fields.CharField(max_length=712)
-    meaning = fields.CharField(max_length=256)
-    term_definition = fields.ForeignKeyField(
-        'models.TermDefinition',
-        on_delete=fields.CASCADE,
-    )
-
-    class Meta:
-        unique_together = (('language', 'term_definition'),)
-
-
-class TermPronunciation(models.Model):
-    phonetic = fields.CharField(max_length=256)
-    audio_url = fields.CharField(max_length=256, null=True)
-    term = fields.OneToOneField(
-        'models.Term',
-        on_delete=fields.CASCADE,
-        null=True,
-    )
-    term_example = fields.OneToOneField(
-        'models.TermExample',
-        on_delete=fields.CASCADE,
-        null=True,
-    )
-    term_lexical = fields.OneToOneField(
-        'models.TermLexical',
-        on_delete=fields.CASCADE,
-        null=True,
+    __table_args__ = (
+        UniqueConstraint('content', 'language', name='uq_content_language'),
+        Index(
+            'idx_content_language',
+            'content',
+            'language',
+            unique=True,
+        ),
     )
 
 
-class TermExampleLink(models.Model):
-    highlight = ArrayField(element_type='int[]')
-    term_example = fields.ForeignKeyField(
-        'models.TermExample',
-        on_delete=fields.CASCADE,
+@table_registry.mapped_as_dataclass
+class TermLexical:
+    __tablename__ = 'term_lexical'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
     )
-    term = fields.ForeignKeyField(
-        'models.Term',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_id: Mapped[int] = mapped_column(
+        ForeignKey('term.id', ondelete='CASCADE'),
     )
-    term_definition = fields.ForeignKeyField(
-        'models.TermDefinition',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_content_id: Mapped[int] = mapped_column(
+        ForeignKey('term.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    term_lexical = fields.ForeignKeyField(
-        'models.TermLexical',
-        on_delete=fields.CASCADE,
-        null=True,
+    content: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    type: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    additional_content: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+@table_registry.mapped_as_dataclass
+class TermImage:
+    __tablename__ = 'term_image'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    term_id: Mapped[int] = mapped_column(
+        ForeignKey('term.id', ondelete='CASCADE'),
+        unique=True,
+    )
+    image_url: Mapped[str] = mapped_column(String(256), nullable=False)
+
+
+@table_registry.mapped_as_dataclass
+class TermExample:
+    __tablename__ = 'term_example'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    language: Mapped[str] = mapped_column(String(7), nullable=False)
+    content: Mapped[str] = mapped_column(String(256), nullable=False)
+    level: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    additional_content: Mapped[dict | None] = mapped_column(
+        JSON,
+        nullable=True,
     )
 
-    class Meta:
-        unique_together = [
-            ['term', 'term_example'],
-            ['term_definition', 'term_example'],
-            ['term_lexical', 'term_example'],
-        ]
+
+@table_registry.mapped_as_dataclass
+class TermExampleTranslation:
+    __tablename__ = 'term_example_translation'
+
+    language: Mapped[str] = mapped_column(String(7), primary_key=True, nullable=False)
+    translation: Mapped[str] = mapped_column(String(256), nullable=False)
+    term_example_id: Mapped[int] = mapped_column(
+        ForeignKey('term_example.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            'language', 'term_example_id', name='uq_language_term_example'
+        ),
+    )
+
+
+@table_registry.mapped_as_dataclass
+class TermDefinition:
+    __tablename__ = 'term_definition'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    part_of_speech: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    content: Mapped[str] = mapped_column(String(512), nullable=False)
+    level: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    term_id: Mapped[int] = mapped_column(ForeignKey('term.id', ondelete='CASCADE'))
+    term_lexical_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_lexical.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+    additional_content: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+@table_registry.mapped_as_dataclass
+class TermDefinitionTranslation:
+    __tablename__ = 'term_definition_translation'
+
+    language: Mapped[str] = mapped_column(String(2), primary_key=True, nullable=False)
+    translation: Mapped[str] = mapped_column(String(512), nullable=False)
+    meaning: Mapped[str] = mapped_column(String(256), nullable=False)
+    term_definition_id: Mapped[int] = mapped_column(
+        ForeignKey('term_definition.id', ondelete='CASCADE'),
+        primary_key=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            'language',
+            'term_definition_id',
+            name='uq_language_term_definition',
+        ),
+    )
+
+
+@table_registry.mapped_as_dataclass
+class TermPronunciation:
+    __tablename__ = 'term_pronunciation'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    phonetic: Mapped[str] = mapped_column(String(256), nullable=False)
+    audio_url: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    term_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term.id', ondelete='CASCADE'),
+        nullable=True,
+        unique=True,
+    )
+    term_example_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_example.id', ondelete='CASCADE'),
+        nullable=True,
+        unique=True,
+    )
+    term_lexical_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_lexical.id', ondelete='CASCADE'),
+        nullable=True,
+        unique=True,
+    )
+
+
+@table_registry.mapped_as_dataclass
+class TermExampleLink:
+    __tablename__ = 'term_example_link'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    highlight: Mapped[list[list[int]]] = mapped_column(
+        ARRAY(Integer, dimensions=2), nullable=False
+    )
+    term_example_id: Mapped[int] = mapped_column(
+        ForeignKey('term_example.id', ondelete='CASCADE')
+    )
+    term_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+    term_definition_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_definition.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+    term_lexical_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_lexical.id', ondelete='CASCADE'),
+        nullable=True,
+    )
+
+    __table_args__ = (
+        UniqueConstraint('term_id', 'term_example_id', name='uq_term_term_example'),
+        UniqueConstraint(
+            'term_definition_id',
+            'term_example_id',
+            name='uq_term_definition_term_example',
+        ),
+        UniqueConstraint(
+            'term_lexical_id',
+            'term_example_id',
+            name='uq_term_lexical_term_example',
+        ),
+    )

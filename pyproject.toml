@@ -8,9 +8,11 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 fastapi = {extras = ["standard"], version = "^0.115.0"}
-tortoise-orm = {extras = ["accel", "asyncpg"], version = "^0.21.6"}
+sqlalchemy = "^2.0.36"
 pydantic-settings = "^2.5.2"
-fastapi-users = "^13.0.0"
+fastapi-pagination = "^0.12.31"
+asyncpg = "^0.29.0"
+fastapi-users = {extras = ["sqlalchemy"], version = "^13.0.0"}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -22,8 +24,9 @@ ruff = "^0.6.9"
 isort = "^5.13.2"
 factory-boy = "^3.3.1"
 freezegun = "^1.5.1"
-aerich = "^0.7.2"
 pybabel = "^0.0.0.dev0"
+alembic = "^1.13.3"
+psycopg2-binary = "^2.9.10"
 
 [tool.ruff]
 exclude = [".venv", "migrations"]
@@ -43,17 +46,12 @@ addopts = '-p no:warnings'
 extend-exclude = "(migrations/)"
 
 [tool.taskipy.tasks]
-lint = "ruff check . --fix && blue --check . --diff"
+lint = "ruff check . --fix && blue ."
 format = "ruff format .  && isort ."
 run = "fastapi dev exako/main.py"
-pre_test = "task format"
+pre_test = "task format && task lint"
 test = "pytest -s --cov=. -vv"
 post_test = "coverage html"
-
-[tool.aerich]
-tortoise_orm = "exako.settings.TORTOISE_ORM"
-location = "./migrations"
-src_folder = "./."
 
 [build-system]
 requires = ["poetry-core"]

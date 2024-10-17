@@ -1,7 +1,7 @@
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from exako.apps.core.i18n import set_locale
+from exako.core.i18n import set_locale
 
 
 class LanguageMiddleware(BaseHTTPMiddleware):

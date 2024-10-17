@@ -1,45 +1,17 @@
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
-
 from fastapi import FastAPI
-from tortoise import Tortoise
-from tortoise.contrib.fastapi import RegisterTortoise
+from fastapi_pagination import add_pagination
 
-from exako.apps.core.middleware import LanguageMiddleware
+from exako.apps.term.routers.term import term_router
 from exako.apps.user.router import fastapi_users
 from exako.apps.user.schema import UserCreate, UserRead
 from exako.apps.user.security import auth_cookie_backend, auth_jwt_backend
-from exako.settings import TORTOISE_CONNECTION, TORTOISE_MODULES, register_orm
+from exako.core.middleware import LanguageMiddleware
 
-
-@asynccontextmanager
-async def lifespan_test(app: FastAPI) -> AsyncGenerator[None, None]:
-    async with RegisterTortoise(
-        app=app,
-        config={
-            'apps': TORTOISE_MODULES,
-            'connections': {**TORTOISE_CONNECTION, 'database': 'exako_test'},
-        },
-        generate_schemas=True,
-        add_exception_handlers=True,
-    ):
-        yield
-    await Tortoise._drop_databases()
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    if getattr(app.state, 'testing', None):
-        async with lifespan_test(app) as _:
-            yield
-    else:
-        async with register_orm(app):
-            yield
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 
 app.add_middleware(LanguageMiddleware)
+
+add_pagination(app)
 
 app.include_router(
     fastapi_users.get_auth_router(auth_jwt_backend),
@@ -56,3 +28,5 @@ app.include_router(
     prefix='/auth',
     tags=['auth'],
 )
+
+app.include_router(term_router, prefix='/term', tags=['term'])

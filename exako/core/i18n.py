@@ -3,9 +3,7 @@ from pathlib import Path
 
 from fastapi import Request
 
-from exako.apps.term.constants import Language
-
-DEFAULT_LANGUAGE = Language.ENGLISH_USA
+DEFAULT_LANGUAGE = 'en-USA'
 LOCALES_DIR = Path(__file__).parent / 'translations'
 
 

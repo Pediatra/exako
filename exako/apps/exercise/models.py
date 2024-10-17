@@ -1,47 +1,64 @@
-from tortoise import fields, models
+from datetime import datetime
+
+from sqlalchemy import JSON, BigInteger, ForeignKey,  SmallInteger, String, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from exako.database import table_registry
 
 
-class Exercise(models.Model):
-    language = fields.CharField(max_length=7)
-    type = fields.SmallIntField()
-    level = fields.CharField(max_length=2, null=True)
-    term = fields.ForeignKeyField(
-        'models.Term',
-        on_delete=fields.CASCADE,
-        null=True,
+@table_registry.mapped_as_dataclass
+class Exercise:
+    __tablename__ = 'exercise'
+
+    id: Mapped[int] = mapped_column(BigInteger,  primary_key=True)
+    language: Mapped[str] = mapped_column(String(7), nullable=False)
+    type: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    level: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    term_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    term_example = fields.ForeignKeyField(
-        'models.TermExample',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_example_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_example.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    term_pronunciation = fields.ForeignKeyField(
-        'models.TermPronunciation',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_pronunciation_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_pronunciation.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    term_lexical = fields.ForeignKeyField(
-        'models.TermLexical',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_lexical_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_lexical.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    term_definition = fields.ForeignKeyField(
-        'models.TermDefinition',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_definition_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_definition.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    term_image = fields.ForeignKeyField(
-        'models.TermImage',
-        on_delete=fields.CASCADE,
-        null=True,
+    term_image_id: Mapped[int | None] = mapped_column(
+        ForeignKey('term_image.id', ondelete='CASCADE'),
+        nullable=True,
     )
-    additional_content = fields.JSONField(null=True)
+    additional_content: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True
+    )
 
 
-class ExerciseHistory(models.Model):
-    exercise = fields.ForeignKeyField('models.Exercise', on_delete=fields.NO_ACTION)
-    user = fields.ForeignKeyField('models.User', on_delete=fields.NO_ACTION)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    correct = fields.BooleanField()
-    response = fields.JSONField(null=True)
-    request = fields.JSONField(null=True)
+@table_registry.mapped_as_dataclass
+class ExerciseHistory:
+    __tablename__ = 'exercise_history'
+
+    id: Mapped[int] = mapped_column(BigInteger,  primary_key=True)
+    exercise_id: Mapped[int] = mapped_column(
+        ForeignKey('exercise.id', ondelete='SET NULL')
+    )
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey('user.id', ondelete='SET NULL')
+    )
+    correct: Mapped[bool] = mapped_column(nullable=False)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
+    response: Mapped[dict | None] = mapped_column(
+        JSON, default=None, nullable=True
+    )
+    request: Mapped[dict | None] = mapped_column(
+        JSON, default=None, nullable=True
+    )

@@ -1,18 +1,45 @@
-from tortoise import fields, models
+from datetime import datetime
+
+from sqlalchemy import BigInteger, ForeignKey, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column
+
+from exako.database import table_registry
 
 
-class CardSet(models.Model):
-    user = fields.ForeignKeyField('models.User', on_delete=fields.CASCADE)
-    name = fields.CharField(max_length=256)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    last_review = fields.DatetimeField(auto_now=True)
-    pinned = fields.BooleanField(default=False)
-    language = fields.CharField(max_length=7, null=True)
+@table_registry.mapped_as_dataclass
+class CardSet:
+    __tablename__ = 'cardset'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
+    name: Mapped[str] = mapped_column(String(256), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    last_review: Mapped[datetime] = mapped_column(
+        init=False, onupdate=func.now(), server_default=func.now()
+    )
+    pinned: Mapped[bool] = mapped_column(default=False)
+    language: Mapped[str | None] = mapped_column(String(7), default=None, nullable=True)
 
 
-class Card(models.Model):
-    note = fields.TextField(null=True)
-    created_at = fields.DateField(auto_now_add=True)
-    last_review = fields.DateField(auto_now=True)
-    cardset = fields.ForeignKeyField('models.CardSet', on_delete=fields.CASCADE)
-    term = fields.ForeignKeyField('models.Term', on_delete=fields.CASCADE)
+@table_registry.mapped_as_dataclass
+class Card:
+    __tablename__ = 'card'
+
+    id: Mapped[int] = mapped_column(
+        BigInteger,
+        
+        init=False,
+        primary_key=True,
+    )
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
+    last_review: Mapped[datetime] = mapped_column(
+        init=False, onupdate=func.now(), server_default=func.now()
+    )
+    cardset_id: Mapped[int] = mapped_column(ForeignKey('cardset.id'), nullable=False)
+    term_id: Mapped[int] = mapped_column(ForeignKey('term.id'), nullable=False)

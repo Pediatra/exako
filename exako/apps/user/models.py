@@ -1,52 +1,30 @@
+from datetime import datetime
+
 from fastapi import Depends
 from fastapi_users import BaseUserManager, IntegerIDMixin
-from fastapi_users.db import BaseUserDatabase
-from tortoise import fields, models
-from tortoise.exceptions import DoesNotExist
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
+from sqlalchemy import DateTime, String, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Mapped, mapped_column
+
+from exako.database import get_async_session, table_registry
 
 
-class User(models.Model):
-    id = fields.IntField(pk=True)
-    email = fields.CharField(index=True, unique=True, null=False, max_length=255)
-    hashed_password = fields.CharField(null=False, max_length=1024)
-    is_active = fields.BooleanField(default=True, null=False)
-    is_superuser = fields.BooleanField(default=False, null=False)
-    is_verified = fields.BooleanField(default=False, null=False)
-    name = fields.CharField(max_length=50, null=True)
-    native_language = fields.CharField(max_length=7)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    modified_at = fields.DatetimeField(auto_now=True)
+@table_registry.mapped
+class User(SQLAlchemyBaseUserTableUUID):
+    __tablename__ = 'user'
+
+    name: Mapped[str] = mapped_column(String(50))
+    native_language: Mapped[str] = mapped_column(String(7))
+    created_at: Mapped[datetime] = mapped_column(DateTime   ,server_default=func.now())
 
 
-class UserDatabase(BaseUserDatabase):
-    def __init__(
-        self,
-        user_model: User,
-    ):
-        self.user_model = user_model
-
-    async def get(self, id: int) -> User | None:
-        try:
-            return await self.user_model.get(id=id)
-        except DoesNotExist:
-            return None
-
-    async def get_by_email(self, email: str) -> User | None:
-        return await self.user_model.filter(email__iexact=email).first()
-
-    async def create(self, create_dict: dict) -> User:
-        user = self.user_model(**create_dict)
-        await user.save()
-        await user.refresh_from_db()
-        return user
+async def get_user_db(session: AsyncSession = Depends(get_async_session)):
+    yield SQLAlchemyUserDatabase(session, User)
 
 
 class UserManager(IntegerIDMixin, BaseUserManager):
-    user_db = UserDatabase
-
-
-async def get_user_db():
-    yield UserDatabase(User)
+    pass
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):
