@@ -1,3 +1,4 @@
+from enum import auto
 from exako.core.enum import IntegerChoices, TextChoices
 from exako.core.i18n import _
 
@@ -12,20 +13,38 @@ class Level(TextChoices):
 
 
 class PartOfSpeech(IntegerChoices):
-    ADJECTIVE = 0, _('Adjective')
-    NOUN = 1, _('Noun')
-    VERB = 2, _('Verb')
-    ADVERB = 3, _('Adverb')
-    CONJUNCTION = 4, _('Conjunction')
-    PREPOSITION = 5, _('Preposition')
-    PRONOUN = 6, _('Pronoun')
-    DETERMINER = 7, _('Determiner')
-    NUMBER = 8, _('Number')
-    PREDETERMINER = 9, _('Predeterminer')
-    PREFIX = 10, _('Prefix')
-    SUFFIX = 11, _('Suffix')
-    SLANG = 12, _('Slang')
-    PHRASAL_VERB = 13, _('Phrasal verb')
+    ADJECTIVE = auto(), _('Adjective')
+    NOUN = auto(), _('Noun')
+    VERB = auto(), _('Verb')
+    ADVERB = auto(), _('Adverb')
+    CONJUNCTION = auto(), _('Conjunction')
+    PREPOSITION = auto(), _('Preposition')
+    PRONOUN = auto(), _('Pronoun')
+    DETERMINER = auto(), _('Determiner')
+    NUMBER = auto(), _('Number')
+    PREDETERMINER = auto(), _('Predeterminer')
+    PREFIX = auto(), _('Prefix')
+    SUFFIX = auto(), _('Suffix')
+    SLANG = auto(), _('Slang')
+    PHRASAL_VERB = auto(), _('Phrasal verb')
+    PLURAL = auto(), _('Plural')
+    CONJUGATION = auto(), _('Conjugation')
+    SUPERLATIVE = auto(), _('Superlative')
+    COMPARATIVE = auto(), _('Comparative')
+    CONTRACTION = auto(), _('Contraction')
+    ARTICLE = auto(), _('Article')
+    INTERJECTION = auto(), _('Interjection')
+    PARTICLE = auto(), _('Particle')
+    AUXILIARY_VERB = auto(), _('Auxiliary Verb')
+    PROPER_NOUN = auto(), _('Proper Noun')
+    GERUND = auto(), _('Gerund')
+    INFINITIVE = auto(), _('Infinitive')
+    MODAL_VERB = auto(), _('Modal Verb')
+    ONOMATOPOEIA = auto(), _('Onomatopoeia')
+    CLASSIFIER = auto(), _('Classifier')
+    CARDINAL_NUMBER = auto(), _('Cardinal Number')
+    ORDINAL_NUMBER = auto(),_('Ordinal Number')
+
 
 
 class Language(TextChoices):
@@ -36,7 +55,6 @@ class Language(TextChoices):
     ENGLISH_USA = 'en-US', _('English (USA)')
     ENGLISH_UK = 'en-GB', _('English (UK)')
     FRENCH = 'fr', _('French')
-    FRENCH_CANADA = 'fr-CA', _('French (Canada)')
     GERMAN = 'de', _('German')
     ITALIAN = 'it', _('Italian')
     JAPANESE = 'ja', _('Japanese')
@@ -62,11 +80,11 @@ class Language(TextChoices):
 
 
 class TermLexicalType(IntegerChoices):
-    SYNONYM = 0, _('Synonym')
-    ANTONYM = 1, _('Antonym')
-    INFLECTION = 2, _('Inflection')
-    IDIOM = 3, _('Idiom')
-    RHYME = 4, _('Rhyme')
+    SYNONYM = auto(), _('Synonym')
+    ANTONYM = auto(), _('Antonym')
+    INFLECTION = auto(), _('Inflection')
+    IDIOM = auto(), _('Idiom')
+    RHYME = auto(), _('Rhyme')
 
 
 language_emoji_map: dict[Language, str] = {
@@ -77,7 +95,6 @@ language_emoji_map: dict[Language, str] = {
     Language.ENGLISH_USA: '🇺🇸',
     Language.ENGLISH_UK: '🇬🇧',
     Language.FRENCH: '🇫🇷',
-    Language.FRENCH_CANADA: '🇨🇦',
     Language.GERMAN: '🇩🇪',
     Language.ITALIAN: '🇮🇹',
     Language.JAPANESE: '🇯🇵',
@@ -109,7 +126,6 @@ language_alphabet_map: dict[Language, str] = {
     Language.ENGLISH_USA: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
     Language.ENGLISH_UK: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
     Language.FRENCH: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ',
-    Language.FRENCH_CANADA: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ',
     Language.GERMAN: 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß',
     Language.ITALIAN: 'ABCDEFGHILMNOPQRSTUVZ',
     Language.JAPANESE: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん',

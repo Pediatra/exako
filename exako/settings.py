@@ -9,14 +9,15 @@ class Settings(BaseSettings):
     DATABASE_PASSWORD: str
     DATABASE_NAME: str
 
-    SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    FIEF_CLIENT_ID: str
+    FIEF_CLIENT_SCRET: str
+    FIEF_DOMAIN: str
 
     @property
     def DATABASE(self):
         return str(
             PostgresDsn.build(
-                scheme='postgresql+asyncpg',
+                scheme='postgresql',
                 username=self.DATABASE_USER,
                 password=self.DATABASE_PASSWORD,
                 host=self.DATABASE_HOST,
@@ -27,16 +28,7 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_TEST(self):
-        return str(
-            PostgresDsn.build(
-                scheme='postgresql',
-                username=self.DATABASE_USER,
-                password=self.DATABASE_PASSWORD,
-                host=self.DATABASE_HOST,
-                port=self.DATABASE_PORT,
-                path=f'{self.DATABASE_NAME}_test',
-            )
-        )
+        return self.DATABASE.replace(self.DATABASE_NAME, f'{self.DATABASE_NAME}_test')
 
     class Config:
         env_file = '.env'

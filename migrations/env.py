@@ -1,34 +1,24 @@
 from logging.config import fileConfig
-from pydantic.networks import PostgresDsn
 
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from exako.database import settings, table_registry
+from exako.database import settings
+from sqlmodel import SQLModel
 
 from exako.apps.term.models import *
-from exako.apps.user.models import *
 from exako.apps.cardset.models import *
 from exako.apps.exercise.models import *
 
 config = context.config
-config.set_main_option('sqlalchemy.url', str(
-    PostgresDsn.build(
-        scheme='postgresql',
-        username=settings.DATABASE_USER,
-        password=settings.DATABASE_PASSWORD,
-        host=settings.DATABASE_HOST,
-        port=settings.DATABASE_PORT,
-        path=settings.DATABASE_NAME,
-    )
-))
+config.set_main_option('sqlalchemy.url', settings.DATABASE)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = table_registry.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

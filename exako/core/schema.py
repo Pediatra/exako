@@ -1,13 +1,20 @@
-from pydantic import BaseModel
+from fastapi import status
 
+OBJECT_NOT_FOUND = {
+    status.HTTP_404_NOT_FOUND: {
+        'content': {'application/json': {'example': {'detail': 'object not found.'}}},
+    },
+}
 
-class NotAuthenticated(BaseModel):
-    detail: str = 'could not validate credentials.'
-
-
-class NotFound(BaseModel):
-    detail: str = 'object not found.'
-
-
-class PermissionDenied(BaseModel):
-    detail: str = 'not enough permissions.'
+PERMISSION_DENIED = {
+    status.HTTP_401_UNAUTHORIZED: {
+        'content': {
+            'application/json': {'example': {'detail': 'invalid credentials.'}}
+        },
+    },
+    status.HTTP_403_FORBIDDEN: {
+        'content': {
+            'application/json': {'example': {'detail': 'not enough permissions.'}}
+        },
+    },
+}

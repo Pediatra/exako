@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field, model_validator
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from exako.apps.term import constants
 
@@ -14,7 +16,7 @@ class TermSchema(BaseModel):
 
 class TermView(BaseModel):
     id: int
-    content: str = Field(examples=['Casa'])
+    content: str = Field(examples=['Casa'], max_length=256)
     language: constants.Language
     additional_content: dict | None = Field(
         default=None,
@@ -22,136 +24,120 @@ class TermView(BaseModel):
     )
 
 
-class TermPronunciationLinkSchema(BaseModel):
-    term: int | None = None
-    term_example: int | None = None
-    term_lexical: int | None = None
+class TermLexicalSchema(BaseModel):
+    term_id: int
+    content: str | None = Field(examples=['Lar'], default=None, max_length=256)
+    term_content_id: int | None = None
+    type: constants.TermLexicalType
+    additional_content: dict | None = Field(
+        default=None,
+        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+    )
+
+    @model_validator(mode='after')
+    def validation(self):
+        if not any([self.content, self.term_content]):
+            raise ValueError('you need to provied at least one content ref.')
+        if all([self.content, self.term_content]):
+            raise ValueError(
+                'you cannot reference two values at once (content, term_content).'
+            )
+        return self
+
+
+class TermLexicalView(BaseModel):
+    id: int
+    content: str | None = Field(examples=['Lar'], default=None, max_length=256)
+    term_content_id: int | None = None
+    type: constants.TermLexicalType
+
+
+class TermLexicalFilter(BaseModel):
+    term_id: int
+    type: constants.TermLexicalType | None = None
+
+
+class TermImageSchema(BaseModel):
+    term_id: int
+    image_url: str = Field(
+        default=None,
+        examples=['https://mylink.com/my-image.svg'],
+        max_length=256,
+    )
+
+    @field_validator('image_url')
+    @classmethod
+    def validate_image_url(cls, image_url: str) -> str:
+        value_exception = ValueError('invalid image_url.')
+        try:
+            result = urlparse(image_url)
+            if not all([result.scheme, result.netloc, result.path]):
+                raise value_exception
+        except ValueError:
+            raise value_exception
+
+        path = result.path.lower()
+        if not path.endswith('.svg'):
+            raise value_exception
+        return image_url
+
+
+class TermImageView(BaseModel):
+    id: int
+    image_url: str = Field(
+        default=None,
+        examples=['https://mylink.com/my-image.svg'],
+        max_length=256,
+    )
+
+
+class TermExampleLinkSchema(BaseModel):
+    term_id: int | None = None
+    term_definition_id: int | None = None
+    term_lexical_id: int | None = None
 
     @model_validator(mode='after')
     def link_validator(self):
         link_attributes = {
             field: getattr(self, field)
             for field in {
-                'term',
-                'term_example',
-                'term_lexical',
+                'term_id',
+                'term_definition_id',
+                'term_lexical_id',
             }
             if getattr(self, field, None) is not None
         }
         link_count = len(link_attributes.values())
         if link_count == 0:
-            raise ValueError(
-                'you need to provide at least one object to link.'
-            )
+            raise ValueError('you need to provide at least one object to link.')
         if link_count > 1:
             raise ValueError('you can reference only one object.')
         return self
 
 
-class TermPronunciationSchema(TermPronunciationLinkSchema):
-    phonetic: str = Field(examples=['/ˈhaʊ.zɪz/'])
-    text: str = Field(examples=['Texto que está sendo pronunciado.'])
-    audio_file: str | None = Field(
-        default=None, examples=['https://mylink.com/my-audio.mp3']
-    )
-    description: str | None = Field(
-        examples=['português do brasil'], default=None
-    )
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
-    )
-
-
-class TermPronunciationView(BaseModel):
-    id: int
-    phonetic: str = Field(examples=['/ˈhaʊ.zɪz/'])
-    text: str = Field(examples=['Texto que está sendo pronunciado.'])
-    audio_file: str | None = Field(
-        default=None, examples=['https://mylink.com/my-audio.mp3']
-    )
-    description: str | None = Field(
-        examples=['português do brasil'], default=None
-    )
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
-    )
-
-
-class TermDefinitionSchema(BaseModel):
-    part_of_speech: constants.PartOfSpeech = Field(examples=(['noun']))
-    definition: str = Field(
-        examples=[
-            'Set of walls, rooms, and roof with specific purpose of habitation.'
-        ]
-    )
-    term: int
+class TermExampleFilter(TermExampleLinkSchema):
     level: constants.Level | None = None
-    term_lexical: int | None = None
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
-    )
 
 
-class TermDefinitionView(BaseModel):
-    id: int
-    part_of_speech: constants.PartOfSpeech = Field(examples=(['noun']))
-    definition: str = Field(
-        examples=[
-            'Set of walls, rooms, and roof with specific purpose of habitation.'
-        ]
-    )
-    level: constants.Level | None = None
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
-    )
-
-
-class ListTermDefintionFilter(BaseModel):
-    term: int
-    part_of_speech: constants.PartOfSpeech | None = None
-    level: constants.Level | None = None
-    term_lexical: int | None = None
-
-
-class TermDefinitionTranslationSchema(BaseModel):
-    term_definition: int
+class TermExampleSchema(TermExampleLinkSchema):
     language: constants.Language
-    meaning: str = Field(examples=['Casa, lar'])
-    translation: str = Field(
-        examples=[
-            'Conjunto de parades, quartos e teto com a finalidade de habitação.'
-        ],
+    content: str = Field(
+        examples=["Yesterday a have lunch in my mother's house."],
+        max_length=256,
     )
+    highlight: list[list[int]] = Field(
+        examples=[[[4, 8], [11, 16]]],
+        description='Highlighted positions in the given sentence where the term appears.',
+    )
+    level: constants.Level | None = None
     additional_content: dict | None = Field(
         default=None,
         examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
     )
 
-
-class TermDefinitionTranslationView(BaseModel):
-    language: constants.Language
-    meaning: str = Field(examples=['Casa, lar'])
-    translation: str = Field(
-        examples=[
-            'Conjunto de parades, quartos e teto com a finalidade de habitação.'
-        ],
-    )
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
-    )
-
-
-class ExampleHighlightValidator:
     @model_validator(mode='after')
     def validate_highlight(self):
-        example = getattr(self, 'example', None) or getattr(
-            self, 'translation'
-        )
+        content = getattr(self, 'content', None)
 
         intervals = []
         for value in self.highlight:
@@ -161,7 +147,7 @@ class ExampleHighlightValidator:
                 )
 
             v1, v2 = value
-            example_len = len(example) - 1
+            example_len = len(content) - 1
             if v1 > example_len or v2 > example_len:
                 raise ValueError(
                     'highlight cannot be greater than the length of the example.'
@@ -185,84 +171,82 @@ class ExampleHighlightValidator:
         return self
 
 
-class TermExampleLinkSchema(BaseModel):
-    term: int | None = None
-    term_definition: int | None = None
-    term_lexical: int | None = None
-
-    @model_validator(mode='after')
-    def link_validator(self):
-        link_attributes = {
-            field: getattr(self, field)
-            for field in {
-                'term',
-                'term_definition',
-                'term_lexical',
-            }
-            if getattr(self, field, None) is not None
-        }
-        link_count = len(link_attributes.values())
-        if link_count == 0:
-            raise ValueError(
-                'you need to provide at least one object to link.'
-            )
-        if link_count > 1:
-            raise ValueError('you can reference only one object.')
-        return self
-
-
-class TermExampleSchema(TermExampleLinkSchema, ExampleHighlightValidator):
-    language: constants.Language
-    example: str = Field(
-        examples=["Yesterday a have lunch in my mother's house."]
-    )
-    highlight: list[list[int]] = Field(
-        examples=[[[4, 8], [11, 16]]],
-        description='Highlighted positions in the given sentence where the term appears.',
-    )
-    level: constants.Level | None = None
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
-    )
-
-
 class TermExampleView(BaseModel):
     id: int
     language: constants.Language
-    example: str = Field(
-        examples=["Yesterday a have lunch in my mother's house."]
+    content: str = Field(
+        examples=["Yesterday a have lunch in my mother's house."],
+        max_length=256,
     )
     highlight: list[list[int]] = Field(
         examples=[[[4, 8], [11, 16]]],
-        description='Highlighted positions in the given sentence where the term appears.',
+        description='highlighted positions in the given sentence where the term appears.',
     )
     level: constants.Level | None = None
     additional_content: dict | None = Field(
         default=None,
         examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+    )
+
+
+class TermExampleTranslationSchema(TermExampleLinkSchema):
+    term_example_id: int
+    language: constants.Language
+    translation: str = Field(
+        examples=['Ontem eu almoçei na casa da minha mãe.'], max_length=256
     )
 
 
 class TermExampleTranslationView(BaseModel):
     language: constants.Language
     translation: str = Field(
-        examples=['Ontem eu almoçei na casa da minha mãe.'],
+        examples=['Ontem eu almoçei na casa da minha mãe.'], max_length=256
     )
+
+
+class TermDefinitionSchema(BaseModel):
+    term_id: int
+    part_of_speech: constants.PartOfSpeech = Field(examples=(['noun']))
+    content: str = Field(
+        examples=['Set of walls, rooms, and roof with specific purpose of habitation.'],
+        max_length=512,
+    )
+    level: constants.Level | None = None
+    term_lexical_id: int | None = None
     additional_content: dict | None = Field(
         default=None,
         examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
     )
 
 
-class TermExampleTranslationSchema(
-    TermExampleLinkSchema,
-    ExampleHighlightValidator,
-):
-    term_example: int
+class TermDefinitionView(BaseModel):
+    id: int
+    part_of_speech: constants.PartOfSpeech = Field(examples=(['noun']))
+    content: str = Field(
+        examples=['Set of walls, rooms, and roof with specific purpose of habitation.'],
+        max_length=512,
+    )
+    level: constants.Level | None = None
+    additional_content: dict | None = Field(
+        default=None,
+        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+    )
+
+
+class ListTermDefintionFilter(BaseModel):
+    term_id: int
+    part_of_speech: constants.PartOfSpeech | None = None
+    level: constants.Level | None = None
+    term_lexical_id: int | None = None
+
+
+class TermDefinitionTranslationSchema(BaseModel):
+    term_definition_id: int
     language: constants.Language
+    meaning: str = Field(examples=['Casa, lar'], max_length=256)
     translation: str = Field(
-        examples=['Ontem eu almoçei na casa da minha mãe.'],
+        examples=['Conjunto de parades, quartos e teto com a finalidade de habitação.'],
+        max_length=512,
     )
     additional_content: dict | None = Field(
         default=None,
@@ -270,43 +254,83 @@ class TermExampleTranslationSchema(
     )
 
 
-class TermLexicalSchema(BaseModel):
-    term: int
-    value: str | None = Field(examples=['Lar'], default=None)
-    term_value_ref: int | None = None
-    type: constants.TermLexicalType
-    additional_content: dict | None = Field(
-        default=None,
-        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+class TermDefinitionTranslationView(BaseModel):
+    language: constants.Language
+    meaning: str = Field(examples=['Casa, lar'], max_length=256)
+    translation: str = Field(
+        examples=['Conjunto de parades, quartos e teto com a finalidade de habitação.'],
+        max_length=512,
     )
+
+
+class TermMeaningView(BaseModel):
+    meaning: list[str] = Field(examples=[['casa', 'ave', 'test']])
+
+
+class TermPronunciationLinkSchema(BaseModel):
+    term_id: int | None = None
+    term_example_id: int | None = None
+    term_lexical_id: int | None = None
 
     @model_validator(mode='after')
-    def validation(self):
-        if not any([self.value, self.term_value_ref]):
-            raise ValueError('you need to provied at least one value ref.')
-        if all([self.value, self.term_value_ref]):
-            raise ValueError(
-                'you cannot reference two values at once (value, term_value_ref).'
-            )
+    def link_validator(self):
+        link_attributes = {
+            field: getattr(self, field)
+            for field in {
+                'term_id',
+                'term_example_id',
+                'term_lexical_id',
+            }
+            if getattr(self, field, None) is not None
+        }
+        link_count = len(link_attributes.values())
+        if link_count == 0:
+            raise ValueError('you need to provide at least one object to link.')
+        if link_count > 1:
+            raise ValueError('you can reference only one object.')
         return self
 
 
-class TermLexicalView(BaseModel):
+class TermPronunciationSchema(TermPronunciationLinkSchema):
+    phonetic: str = Field(examples=['/ˈhaʊ.zɪz/'])
+    audio_url: str | None = Field(
+        default=None,
+        examples=['https://mylink.com/my-audio.mp3'],
+        max_length=256,
+    )
+    additional_content: dict | None = Field(
+        default=None,
+        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+    )
+
+    @field_validator('audio_url')
+    @classmethod
+    def validate_audio_url(cls, audio_url: str) -> str:
+        audio_extensions = ['.mp3', '.wav', '.ogg', '.aac', '.flac', '.m4a']
+
+        value_exception = ValueError('invalid audio_url.')
+        try:
+            result = urlparse(audio_url)
+            if not all([result.scheme, result.netloc, result.path]):
+                raise value_exception
+        except ValueError:
+            raise value_exception
+
+        path = result.path.lower()
+        if not any(path.endswith(ext) for ext in audio_extensions):
+            raise value_exception
+        return audio_url
+
+
+class TermPronunciationView(BaseModel):
     id: int
-    value: str | None = Field(examples=['Lar'], default=None)
-    term_value_ref: TermView | None = None
-    type: constants.TermLexicalType
-
-
-class TermLexicalFilter(BaseModel):
-    term: int
-    type: constants.TermLexicalType | None = None
-
-
-class TermImageSchema(BaseModel):
-    term: int
-
-
-class TermImageView(BaseModel):
-    id: int
-    image: str
+    phonetic: str = Field(examples=['/ˈhaʊ.zɪz/'])
+    audio_url: str | None = Field(
+        default=None,
+        examples=['https://mylink.com/my-audio.mp3'],
+        max_length=256,
+    )
+    additional_content: dict | None = Field(
+        default=None,
+        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+    )

@@ -1,45 +1,41 @@
 from datetime import datetime
+from uuid import UUID
 
-from sqlalchemy import BigInteger, ForeignKey, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
-
-from exako.database import table_registry
+import sqlmodel as sm
 
 
-@table_registry.mapped_as_dataclass
-class CardSet:
+class CardSet(sm.SQLModel, table=True):
     __tablename__ = 'cardset'
 
-    id: Mapped[int] = mapped_column(
-        BigInteger,
-        
-        init=False,
-        primary_key=True,
+    id: int | None = sm.Field(
+        default=None,
+        sa_column=sm.Column(sm.BigInteger, primary_key=True),
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'), nullable=False)
-    name: Mapped[str] = mapped_column(String(256), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    last_review: Mapped[datetime] = mapped_column(
-        init=False, onupdate=func.now(), server_default=func.now()
+    user_id: UUID = sm.Field(nullable=False)
+    name: str = sm.Field(max_length=256, nullable=False)
+    created_at: datetime = sm.Field(default_factory=sm.func.now, nullable=False)
+    last_review: datetime = sm.Field(
+        default_factory=sm.func.now,
+        sa_column_kwargs={'onupdate': sm.func.now()},
+        nullable=False,
     )
-    pinned: Mapped[bool] = mapped_column(default=False)
-    language: Mapped[str | None] = mapped_column(String(7), default=None, nullable=True)
+    pinned: bool = sm.Field(default=False)
+    language: str | None = sm.Field(default=None, max_length=7)
 
 
-@table_registry.mapped_as_dataclass
-class Card:
+class Card(sm.SQLModel, table=True):
     __tablename__ = 'card'
 
-    id: Mapped[int] = mapped_column(
-        BigInteger,
-        
-        init=False,
-        primary_key=True,
+    id: int | None = sm.Field(
+        default=None,
+        sa_column=sm.Column(sm.BigInteger, primary_key=True),
     )
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    last_review: Mapped[datetime] = mapped_column(
-        init=False, onupdate=func.now(), server_default=func.now()
+    note: str | None = sm.Field(default=None, nullable=True)
+    created_at: datetime = sm.Field(default_factory=sm.func.now, nullable=False)
+    last_review: datetime = sm.Field(
+        default_factory=sm.func.now,
+        sa_column_kwargs={'onupdate': sm.func.now()},
+        nullable=False,
     )
-    cardset_id: Mapped[int] = mapped_column(ForeignKey('cardset.id'), nullable=False)
-    term_id: Mapped[int] = mapped_column(ForeignKey('term.id'), nullable=False)
+    cardset_id: int = sm.Field(foreign_key='cardset.id', nullable=False)
+    term_id: int = sm.Field(foreign_key='term.id', nullable=False)
