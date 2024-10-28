@@ -10,10 +10,10 @@ from exako.tests.factories.term import (
     TermPronunciationFactory,
 )
 
-create_pronunciation_route = app.url_path_for('create_pronunciation')
+create_pronunciation_router = app.url_path_for('create_pronunciation')
 
 
-def get_pronunciation_route(
+def get_pronunciation_router(
     term_id=None,
     term_example_id=None,
     term_lexical_id=None,
@@ -40,7 +40,7 @@ def test_create_term_pronunciation(client, generate_payload, factory, link_name)
     payload = generate_payload(TermPronunciationFactory, **{link_name: instance})
 
     response = client.post(
-        create_pronunciation_route,
+        create_pronunciation_router,
         json=payload,
     )
 
@@ -64,7 +64,7 @@ def test_create_term_pronunciation_model_link_not_found(
     payload.update(**model)
 
     response = client.post(
-        create_pronunciation_route,
+        create_pronunciation_router,
         json=payload,
     )
 
@@ -77,11 +77,41 @@ def test_create_term_pronunciation_already_exists(client, generate_payload):
     TermPronunciationFactory(**payload, term=term)
 
     response = client.post(
-        create_pronunciation_route,
+        create_pronunciation_router,
         json=payload,
     )
 
     assert response.status_code == 409
+
+
+@pytest.mark.parametrize(
+    'url',
+    [
+        '',
+        'not_a_url',
+        'http://',
+        'http:///path.svg',
+        'https://domain',
+        'file:///path/image.svg',
+        'http://example.com/test.png',
+    ],
+)
+def test_create_term_pronunciation_invalid_url_format(client, generate_payload, url):
+    term = TermFactory()
+    payload = generate_payload(TermPronunciationFactory, term=term, audio_url=url)
+
+    response = client.post(
+        create_pronunciation_router,
+        json=payload,
+    )
+
+    response = client.post(
+        create_pronunciation_router,
+        json=payload,
+    )
+
+    assert response.status_code == 422
+    assert 'invalid audio_url.' in response.json()['detail'][0]['msg']
 
 
 def test_create_term_pronunciation_model_link_attribute_not_set(
@@ -90,7 +120,7 @@ def test_create_term_pronunciation_model_link_attribute_not_set(
     payload = generate_payload(TermPronunciationFactory, term_id=None)
 
     response = client.post(
-        create_pronunciation_route,
+        create_pronunciation_router,
         json=payload,
     )
 
@@ -116,7 +146,7 @@ def test_create_term_pronunciation_multiple_models(client, generate_payload, lin
     payload.update(link_attr)
 
     response = client.post(
-        create_pronunciation_route,
+        create_pronunciation_router,
         json=payload,
     )
 
@@ -130,7 +160,7 @@ def test_create_term_pronunciation_lexical_term_content(client, generate_payload
     payload = generate_payload(TermPronunciationFactory, term_lexical=term_lexical)
 
     response = client.post(
-        create_pronunciation_route,
+        create_pronunciation_router,
         json=payload,
     )
 
@@ -154,7 +184,7 @@ def test_get_term_pronunciation(client, factory, link_name):
     pronunciation = TermPronunciationFactory(**{link_name: instance})
     TermPronunciationFactory.create_batch(5)
 
-    response = client.get(get_pronunciation_route(**{f'{link_name}_id': instance.id}))
+    response = client.get(get_pronunciation_router(**{f'{link_name}_id': instance.id}))
 
     assert response.status_code == 200
     assert TermPronunciation(**response.json()) == pronunciation
@@ -171,13 +201,13 @@ def test_get_term_pronunciation(client, factory, link_name):
 def test_get_term_pronunciation_not_found(client, model):
     TermPronunciationFactory.create_batch(5)
 
-    response = client.get(get_pronunciation_route(**model))
+    response = client.get(get_pronunciation_router(**model))
 
     assert response.status_code == 404
 
 
 def test_get_term_pronunciation_model_not_set(client):
-    response = client.get(get_pronunciation_route())
+    response = client.get(get_pronunciation_router())
 
     assert response.status_code == 422
     assert (
@@ -200,7 +230,7 @@ def test_get_term_pronunciation_model_not_set(client):
     ],
 )
 def test_get_term_pronunciation_model_multiple_invalid(client, link_attr):
-    response = client.get(get_pronunciation_route(**link_attr))
+    response = client.get(get_pronunciation_router(**link_attr))
 
     assert response.status_code == 422
     assert 'you can reference only one object.' in response.json()['detail'][0]['msg']

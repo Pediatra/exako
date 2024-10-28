@@ -1,3 +1,5 @@
+import pytest
+
 from exako.apps.term.models import TermImage
 from exako.main import app
 from exako.tests.factories.term import TermFactory, TermImageFactory
@@ -33,6 +35,30 @@ def test_create_term_image_term_not_found(client, generate_payload):
     )
 
     assert response.status_code == 404
+
+
+@pytest.mark.parametrize(
+    'url',
+    [
+        '',
+        'not_a_url',
+        'http://',
+        'http:///path.svg',
+        'https://domain',
+        'file:///path/image.svg',
+        'http://example.com/test.png',
+    ],
+)
+def test_create_term_image_invalid_url_format(client, generate_payload, url):
+    payload = generate_payload(TermImageFactory, image_url=url)
+    payload.update(term_id=TermFactory().id)
+
+    response = client.post(
+        create_term_image_router,
+        json=payload,
+    )
+
+    assert response.status_code == 422
 
 
 def test_get_term_image(client):

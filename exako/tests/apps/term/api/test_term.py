@@ -22,10 +22,6 @@ def get_term_route(content, language):
     )
 
 
-def get_term_id_route(id):
-    return app.url_path_for('get_term_id', kwargs={'term_id': id})
-
-
 def search_term_route(content, language):
     url = app.url_path_for('search_term')
     return set_url_params(

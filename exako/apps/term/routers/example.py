@@ -116,10 +116,6 @@ def create_example(
     summary='Criação de traduções para exemplos sobre um termo.',
     description="""
         Endpoint utilizado para criação tradução para exemplos de termos ou definições.
-        Só poderá ser enviado um dos 3 objetos para ligação com o exemplo fornecido.
-        expression, language  - Exemplo para termos
-        term_definition_id - Exemplo para definições
-        term_lexical_id - Exemplo para lexical
     """,
 )
 def create_example_translation(
@@ -135,7 +131,6 @@ def create_example_translation(
         raise HTTPException(
             status_code=409, detail='translation already exists for this example.'
         )
-
     return translation
 
 

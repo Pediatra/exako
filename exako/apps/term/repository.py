@@ -158,21 +158,6 @@ class TermExampleLinkRepository(BaseRepository):
 class TermExampleTranslationRepository(BaseRepository):
     model = models.TermExampleTranslation
 
-    def create(self, **kwargs):
-        if self.session.exec(
-            select(models.TermExampleTranslation).where(
-                models.TermExampleTranslation.language == kwargs['language'],
-                models.TermExampleTranslation.term_example_id
-                == kwargs['term_example_id'],
-                func.clean_text(models.TermExampleTranslation.translation)
-                == func.clean_text(kwargs['translation']),
-            )
-        ).first():
-            raise HTTPException(
-                status_code=409, detail='translation already exists for this example.'
-            )
-        return super().create(**kwargs)
-
 
 class TermDefinitionRepository(BaseRepository):
     model = models.TermDefinition
