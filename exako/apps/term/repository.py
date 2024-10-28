@@ -82,23 +82,23 @@ class TermRepository(BaseRepository):
 
 class TermLexicalRepository(BaseRepository):
     model = models.TermLexical
+    ordering = [models.TermLexical.id]
 
     def create(self, **kwargs):
-        if self.session.exec(
-            select(models.TermLexical).where(
-                and_(
-                    models.TermLexical.term_id == kwargs['term_id'],
-                    models.TermLexical.type == kwargs['type'],
-                    or_(
-                        func.clean_text(models.TermLexical.content).icontains(
-                            func.clean_text(kwargs.get('content'))
-                        ),
-                        models.TermLexical.term_content_id
-                        == kwargs.get('term_content_id'),
-                    ),
-                )
+        exists_query = select(models.TermLexical).where(
+            models.TermLexical.term_id == kwargs['term_id'],
+            models.TermLexical.type == kwargs['type'],
+        )
+        if kwargs.get('content') is not None:
+            exists_query = exists_query.where(
+                func.clean_text(models.TermLexical.content)
+                == (func.clean_text(kwargs['content']))
             )
-        ).first():
+        else:
+            exists_query = exists_query.where(
+                models.TermLexical.term_content_id == kwargs['term_content_id']
+            )
+        if self.session.exec(exists_query).first():
             raise HTTPException(
                 status_code=409,
                 detail='lexical already exists to this term.',
@@ -117,7 +117,7 @@ class TermPronunciationRepository(BaseRepository):
 class TermExampleRepository(BaseRepository):
     model = models.TermExample
 
-    def list(self, statement=None, paginate=True, **kwargs):
+    def list(self, statement=None, paginate=False, **kwargs):
         filter_params = kwargs.pop('filter_params')
         link_params = kwargs.pop('link_params')
 
@@ -183,8 +183,8 @@ class TermDefinitionRepository(BaseRepository):
             select(models.TermDefinition).where(
                 models.TermDefinition.id == kwargs['term_id'],
                 models.TermDefinition.part_of_speech == kwargs['part_of_speech'],
-                func.clean_text(models.TermDefinition)
-                == func.clean_text(models.TermDefinition),
+                func.clean_text(models.TermDefinition.content)
+                == func.clean_text(models.TermDefinition.content),
             )
         ).first():
             raise HTTPException(
@@ -197,7 +197,7 @@ class TermDefinitionRepository(BaseRepository):
 class TermDefinitionTranslationRepository(BaseRepository):
     model = models.TermDefinitionTranslation
 
-    def list_meaning(self, term_id):
+    def list_meaning(self, term_id, translation_language):
         return self.session.exec(
             select(models.TermDefinitionTranslation.meaning)
             .join(
@@ -205,5 +205,8 @@ class TermDefinitionTranslationRepository(BaseRepository):
                 models.TermDefinition.id
                 == models.TermDefinitionTranslation.term_definition_id,
             )
-            .where(models.TermDefinition.term_id == term_id)
+            .where(
+                models.TermDefinition.term_id == term_id,
+                models.TermDefinitionTranslation.language == translation_language,
+            )
         ).all()

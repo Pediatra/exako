@@ -1,7 +1,7 @@
 import pytest
 from factory.alchemy import SQLAlchemyModelFactory
 from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, inspect
 
 from exako.auth import current_admin_user, current_user
 from exako.database import get_session
@@ -45,10 +45,27 @@ def session(engine):
     session.close()
 
 
+def _include_foreign_keys(model, instance):
+    inspector = inspect(model)
+    result = dict()
+    foreign_keys = [
+        column.key for column in inspector.columns.values() if column.foreign_keys
+    ]
+    for fk in foreign_keys:
+        fk_attr = fk.replace('_id', '')
+        fk_instance = getattr(instance, fk_attr, None)
+        if fk_instance is None:
+            continue
+        result[fk] = fk_instance.id
+    return result
+
+
 @pytest.fixture
 def generate_payload():
     def _generate(factory, exclude=None, include=None, **kwargs):
-        result = factory.build(**kwargs)
-        return result.model_dump(exclude=exclude, include=include)
+        instance = factory.build(**kwargs)
+        result_dict = instance.model_dump(exclude=exclude, include=include)
+        result_dict.update(_include_foreign_keys(factory._meta.model, instance))
+        return result_dict
 
     return _generate

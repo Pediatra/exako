@@ -8,7 +8,7 @@ from exako.apps.term.constants import Language, Level, PartOfSpeech, TermLexical
 class TermFactory(factory.alchemy.SQLAlchemyModelFactory):
     content = factory.Faker('sentence')
     language = Language.PORTUGUESE_BRAZIL
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
+    additional_content = {'syllable': ['ca', 'sa']}
 
     class Meta:
         model = models.Term
@@ -19,7 +19,7 @@ class TermLexicalFactory(factory.alchemy.SQLAlchemyModelFactory):
     content = factory.Faker('sentence')
     type = fuzzy.FuzzyChoice(TermLexicalType)
     term = factory.SubFactory(TermFactory)
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
+    additional_content = {'syllable': ['ca', 'sa']}
 
     class Meta:
         model = models.TermLexical
@@ -30,7 +30,7 @@ class TermExampleFactory(factory.alchemy.SQLAlchemyModelFactory):
     language = Language.PORTUGUESE_BRAZIL
     content = factory.Faker('sentence', nb_words=8)
     level = fuzzy.FuzzyChoice(Level)
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
+    additional_content = {'syllable': ['ca', 'sa']}
 
     class Meta:
         model = models.TermExample
@@ -38,10 +38,9 @@ class TermExampleFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class TermExampleTranslationFactory(factory.alchemy.SQLAlchemyModelFactory):
-    language = Language.CHINESE
+    language = Language.ARABIC
     translation = factory.Faker('sentence')
     term_example = factory.SubFactory(TermExampleFactory)
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
 
     class Meta:
         model = models.TermExampleTranslation
@@ -53,7 +52,7 @@ class TermDefinitionFactory(factory.alchemy.SQLAlchemyModelFactory):
     part_of_speech = fuzzy.FuzzyChoice(PartOfSpeech)
     content = factory.Faker('sentence')
     term = factory.SubFactory(TermFactory)
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
+    additional_content = {'syllable': ['ca', 'sa']}
 
     class Meta:
         model = models.TermDefinition
@@ -61,11 +60,10 @@ class TermDefinitionFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class TermDefinitionTranslationFactory(factory.alchemy.SQLAlchemyModelFactory):
-    language = Language.CHINESE
+    language = Language.ARABIC
     translation = factory.Faker('sentence')
     meaning = factory.Faker('sentence')
     term_definition = factory.SubFactory(TermDefinitionFactory)
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
 
     class Meta:
         model = models.TermDefinitionTranslation
@@ -73,10 +71,9 @@ class TermDefinitionTranslationFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 
 class TermPronunciationFactory(factory.alchemy.SQLAlchemyModelFactory):
-    audio_url = factory.Faker('url')
+    audio_url = 'https://www.example.com/audio.mp3'
     phonetic = factory.Faker('name')
-    term = factory.SubFactory(TermFactory)
-    additional_content = {'syllable': ['ca', 'sa'], 'part': 'en'}
+    additional_content = {'syllable': ['ca', 'sa']}
 
     class Meta:
         model = models.TermPronunciation
@@ -85,7 +82,7 @@ class TermPronunciationFactory(factory.alchemy.SQLAlchemyModelFactory):
 
 class TermImageFactory(factory.alchemy.SQLAlchemyModelFactory):
     term = factory.SubFactory(TermFactory)
-    image_url = factory.Faker('url')
+    image_url = 'https://www.example.com/image.svg'
 
     class Meta:
         model = models.TermImage

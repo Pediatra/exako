@@ -6,8 +6,11 @@ from sqlalchemy.exc import IntegrityError
 
 from exako.apps.term import constants, schema
 from exako.apps.term.repository import TermRepository
+from exako.apps.term.routers.definition import definition_router
 from exako.apps.term.routers.example import example_router
+from exako.apps.term.routers.image import image_router
 from exako.apps.term.routers.lexical import lexical_router
+from exako.apps.term.routers.pronunciation import pronunciation_router
 from exako.auth import current_admin_user
 from exako.core import schema as core_schema
 from exako.core.pagination import Page
@@ -15,7 +18,10 @@ from exako.core.pagination import Page
 term_router = APIRouter()
 
 term_router.include_router(lexical_router, prefix='/lexical')
+term_router.include_router(pronunciation_router, prefix='/pronunciation')
 term_router.include_router(example_router, prefix='/example')
+term_router.include_router(definition_router, prefix='/definition')
+term_router.include_router(image_router, prefix='/image')
 
 
 @term_router.post(
@@ -85,7 +91,8 @@ def search_term(
     language: constants.Language,
 ) -> Page[schema.TermView]:
     return repository.list(
-        statement=TermRepository.search_term_statement(content, language)
+        statement=TermRepository.search_term_statement(content, language),
+        paginate=True,
     )
 
 
@@ -104,6 +111,7 @@ def search_reverse(
         statement=TermRepository.search_reverse_term_statement(
             content, language, translation_language
         ),
+        paginate=True,
     )
 
 
@@ -118,5 +126,6 @@ def term_index(
     language: constants.Language = Query(...),
 ) -> Page[schema.TermView]:
     return repository.list(
-        statement=TermRepository.index_term_statement(char, language)
+        statement=TermRepository.index_term_statement(char, language),
+        paginate=True,
     )

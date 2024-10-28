@@ -7,9 +7,8 @@ from exako.apps.term import schema
 from exako.apps.term.repository import TermLexicalRepository
 from exako.auth import current_admin_user
 from exako.core import schema as core_schema
-from exako.core.pagination import Page
 
-lexical_router = APIRouter(tags=['Lexical'])
+lexical_router = APIRouter()
 
 
 @lexical_router.post(
@@ -41,11 +40,12 @@ def create_lexical(
 
 @lexical_router.get(
     path='',
+    response_model=list[schema.TermLexicalView],
     summary='Consulta de relação de uma relação lexical.',
     description='Endpoint utilizado para consultar de relações lexicais entre termos.',
 )
-def list_lexical(
+def list_lexicals(
     repository: Annotated[TermLexicalRepository, Depends(TermLexicalRepository)],
     filter_query: Annotated[schema.TermLexicalFilter, Query()],
-) -> Page[schema.TermLexicalView]:
-    return repository.list(filter_query.model_dump(exclude_none=True))
+):
+    return repository.list(**filter_query.model_dump(exclude_none=True))

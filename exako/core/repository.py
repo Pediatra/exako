@@ -48,6 +48,8 @@ class BaseRepository:
 
     def _validate_foreign_keys(self, **fields):
         for name, value in fields.items():
+            if value is None:
+                continue
             if name in self._foreign_keys:
                 _get_or_404(self._foreign_keys[name], self.session, id=value)
 
@@ -57,6 +59,7 @@ class BaseRepository:
         instance = self.model(**kwargs)
         self.session.add(instance)
         self.session.commit()
+        self.session.refresh(instance)
         return instance
 
     def delete(self, instance: type[SQLModel]):
@@ -71,10 +74,12 @@ class BaseRepository:
 
         self.session.add(instance)
         self.session.commit()
+        self.session.refresh(instance)
         return instance
 
     def get_or_404(
         self,
+        *,
         statement: Select | None = None,
         **kwargs,
     ):
@@ -85,7 +90,7 @@ class BaseRepository:
             **kwargs,
         )
 
-    def list(self, statement: Select | None = None, paginate: bool = True, **kwargs):
+    def list(self, statement: Select | None = None, paginate: bool = False, **kwargs):
         if statement is None:
             statement = select(self.model)
         if kwargs and hasattr(statement, 'filter_by'):
@@ -93,9 +98,9 @@ class BaseRepository:
         statement = statement.order_by(*self.ordering)
         if paginate:
             return paginate_query(self.session, statement)
-        return self.session.exec(statement)
+        return self.session.exec(statement).all()
 
-    def get_or_create(self, statement=None, defaults=None, **kwargs):
+    def get_or_create(self, *, statement=None, defaults=None, **kwargs):
         try:
             return self.get_or_404(statement=statement, **kwargs), False
         except HTTPException:

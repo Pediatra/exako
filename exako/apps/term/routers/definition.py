@@ -89,14 +89,11 @@ def list_definitions(
     repository: Annotated[TermDefinitionRepository, Depends(TermDefinitionRepository)],
     filter_schema: Annotated[schema.ListTermDefintionFilter, Query()],
 ):
-    return repository.list(
-        **filter_schema.model_dump(exclude_none=True),
-        paginate=False,
-    )
+    return repository.list(**filter_schema.model_dump(exclude_none=True))
 
 
 @definition_router.get(
-    path='/translation/{term_definition}/{language}',
+    path='/translation/{term_definition_id}/{language}',
     response_model=schema.TermDefinitionTranslationView,
     responses={**core_schema.OBJECT_NOT_FOUND},
     summary='Consulta a tradução da definição de um termo.',
@@ -107,17 +104,17 @@ def get_definition_translation(
         TermDefinitionTranslationRepository,
         Depends(TermDefinitionTranslationRepository),
     ],
-    term_definition: int,
+    term_definition_id: int,
     language: constants.Language,
 ):
     return repository.get_or_404(
-        term_definition_id=term_definition,
+        term_definition_id=term_definition_id,
         language=language,
     )
 
 
 @definition_router.get(
-    'meaning/{term_id}',
+    'meaning/{term_id}/{translation_language}',
     response_model=schema.TermMeaningView,
     summary='Consulta as traduções de um termo.',
 )
@@ -127,5 +124,11 @@ def list_term_meanings(
         Depends(TermDefinitionTranslationRepository),
     ],
     term_id: int,
+    translation_language: constants.Language,
 ):
-    return translation_repository.list_meaning(term_id)
+    return schema.TermMeaningView(
+        meanings=translation_repository.list_meaning(
+            term_id,
+            translation_language,
+        )
+    )

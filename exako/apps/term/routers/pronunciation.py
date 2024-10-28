@@ -45,7 +45,7 @@ def create_pronunciation(
 @pronunciation_router.get(
     path='',
     response_model=schema.TermPronunciationView,
-    response={**core_schema.OBJECT_NOT_FOUND},
+    responses={**core_schema.OBJECT_NOT_FOUND},
     summary='Consulta das pronúncias.',
     description='Endpoint utilizado para consultar pronúncias com áudio, fonemas e descrição sobre um determinado modelo.',
 )
@@ -55,4 +55,4 @@ def get_pronunciation(
     ],
     pronunciation_filter: Annotated[schema.TermPronunciationLinkSchema, Query()],
 ):
-    return repository.get_or_404(pronunciation_filter.model_dump(exclude_none=True))
+    return repository.get_or_404(**pronunciation_filter.model_dump(exclude_none=True))

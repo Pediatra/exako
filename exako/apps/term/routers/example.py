@@ -64,10 +64,11 @@ def create_example(
         **example_schema.model_dump(
             include={
                 'language',
-                'example',
+                'content',
             }
         ),
     )
+    example_dump = example.model_dump()
 
     try:
         link_repository.create(
@@ -75,10 +76,10 @@ def create_example(
             **example_schema.model_dump(
                 include={
                     'highlight',
-                    'term_example',
-                    'term',
-                    'term_definition',
-                    'term_lexical',
+                    'term_example_id',
+                    'term_id',
+                    'term_definition_id',
+                    'term_lexical_id',
                 },
             ),
         )
@@ -88,10 +89,10 @@ def create_example(
             detail='example already linked with this model.',
         )
 
-    return {
-        **example.model_dump(),
-        'highlight': example_schema.highlight,
-    }
+    return schema.TermExampleView(
+        **example_dump,
+        highlight=example_schema.highlight,
+    )
 
 
 @example_router.post(
@@ -129,25 +130,13 @@ def create_example_translation(
     translation_schema: schema.TermExampleTranslationSchema,
 ):
     try:
-        translation = repository.create(
-            **translation_schema.model_dump(
-                include={
-                    'language',
-                    'term_example',
-                    'translation',
-                    'additional_content',
-                }
-            ),
-        )
+        translation = repository.create(**translation_schema.model_dump())
     except IntegrityError:
         raise HTTPException(
             status_code=409, detail='translation already exists for this example.'
         )
 
-    return {
-        **translation.model_dump(),
-        'highlight': translation_schema.highlight,
-    }
+    return translation
 
 
 @example_router.get(
@@ -162,11 +151,12 @@ def list_examples(
     return repository.list(
         filter_params=filter_schema.model_dump(include={'level'}, exclude_none=True),
         link_params=filter_schema.model_dump(exclude={'level'}, exclude_none=True),
+        paginate=True,
     )
 
 
 @example_router.get(
-    path='/translation/{term_example}/{language}',
+    path='/translation/{term_example_id}/{language}',
     response_model=schema.TermExampleTranslationView,
     responses={**core_schema.OBJECT_NOT_FOUND},
     summary='Consulta da tradução dos exemplos.',
@@ -176,10 +166,10 @@ def get_example_translation(
     repository: Annotated[
         TermExampleTranslationRepository, Depends(TermExampleTranslationRepository)
     ],
-    term_example: int,
+    term_example_id: int,
     language: constants.Language,
 ):
     return repository.get_or_404(
-        term_example_id=term_example,
+        term_example_id=term_example_id,
         language=language,
     )

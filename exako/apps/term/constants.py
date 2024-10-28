@@ -1,4 +1,5 @@
 from enum import auto
+
 from exako.core.enum import IntegerChoices, TextChoices
 from exako.core.i18n import _
 
@@ -43,13 +44,11 @@ class PartOfSpeech(IntegerChoices):
     ONOMATOPOEIA = auto(), _('Onomatopoeia')
     CLASSIFIER = auto(), _('Classifier')
     CARDINAL_NUMBER = auto(), _('Cardinal Number')
-    ORDINAL_NUMBER = auto(),_('Ordinal Number')
-
+    ORDINAL_NUMBER = auto(), _('Ordinal Number')
 
 
 class Language(TextChoices):
     ARABIC = 'ar', _('Arabic')
-    CHINESE = 'zh', _('Chinese')
     CHINESE_SIMPLIFIED = 'zh-CN', _('Chinese (Simplified)')
     CHINESE_TRADITIONAL = 'zh-TW', _('Chinese (Traditional)')
     ENGLISH_USA = 'en-US', _('English (USA)')
@@ -89,7 +88,6 @@ class TermLexicalType(IntegerChoices):
 
 language_emoji_map: dict[Language, str] = {
     Language.ARABIC: '🇸🇦',
-    Language.CHINESE: '🇨🇳',
     Language.CHINESE_SIMPLIFIED: '🇨🇳',
     Language.CHINESE_TRADITIONAL: '🇹🇼',
     Language.ENGLISH_USA: '🇺🇸',
@@ -120,7 +118,6 @@ language_emoji_map: dict[Language, str] = {
 
 language_alphabet_map: dict[Language, str] = {
     Language.ARABIC: 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي',
-    Language.CHINESE: '阿贝色德饿佛日哈伊鸡卡勒马娜哦佩苦耳斯特乌维独埃克斯伊格黑克',
     Language.CHINESE_SIMPLIFIED: '阿贝色德饿佛日哈伊鸡卡勒马娜哦佩苦耳斯特乌维独埃克斯伊格黑克',
     Language.CHINESE_TRADITIONAL: '阿貝色德餓佛日哈伊雞卡勒馬娜哦佩苦耳斯特烏維獨埃克斯伊格黑克',
     Language.ENGLISH_USA: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',

@@ -3,7 +3,6 @@ from typing import Any
 import sqlmodel as sm
 from sqlalchemy import ARRAY
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class Term(sm.SQLModel, table=True):
@@ -19,12 +18,19 @@ class Term(sm.SQLModel, table=True):
         default=None, sa_column=sm.Column(JSONB)
     )
 
+    lexical_contents: list['TermLexical'] | None = sm.Relationship(
+        back_populates='term_content',
+        sa_relationship_kwargs={'primaryjoin': 'TermLexical.term_content_id==Term.id'},
+    )
     lexicals: list['TermLexical'] = sm.Relationship(
         back_populates='term',
         sa_relationship_kwargs={'primaryjoin': 'TermLexical.term_id==Term.id'},
     )
     images: list['TermImage'] = sm.Relationship(back_populates='term')
     definitions: list['TermDefinition'] = sm.Relationship(back_populates='term')
+    pronunciations: list['TermPronunciation'] | None = sm.Relationship(
+        back_populates='term'
+    )
 
     __table_args__ = (
         sm.Index(
@@ -59,7 +65,14 @@ class TermLexical(sm.SQLModel, table=True):
         back_populates='lexicals',
         sa_relationship_kwargs={'primaryjoin': 'TermLexical.term_id==Term.id'},
     )
+    term_content: Term | None = sm.Relationship(
+        back_populates='lexical_contents',
+        sa_relationship_kwargs={'primaryjoin': 'TermLexical.term_content_id==Term.id'},
+    )
     definitions: list['TermDefinition'] = sm.Relationship(back_populates='term_lexical')
+    pronunciations: list['TermPronunciation'] | None = sm.Relationship(
+        back_populates='term_lexical'
+    )
 
 
 class TermImage(sm.SQLModel, table=True):
@@ -90,6 +103,9 @@ class TermExample(sm.SQLModel, table=True):
     )
 
     translations: list['TermExampleTranslation'] = sm.Relationship(
+        back_populates='term_example'
+    )
+    pronunciations: list['TermPronunciation'] | None = sm.Relationship(
         back_populates='term_example'
     )
 
@@ -167,6 +183,10 @@ class TermPronunciation(sm.SQLModel, table=True):
     additional_content: dict[str, Any] | None = sm.Field(
         default=None, sa_column=sm.Column(JSONB)
     )
+
+    term: Term | None = sm.Relationship(back_populates='pronunciations')
+    term_lexical: TermLexical | None = sm.Relationship(back_populates='pronunciations')
+    term_example: TermExample | None = sm.Relationship(back_populates='pronunciations')
 
 
 class TermExampleLink(sm.SQLModel, table=True):

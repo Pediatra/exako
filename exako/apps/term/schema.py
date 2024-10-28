@@ -36,25 +36,30 @@ class TermLexicalSchema(BaseModel):
 
     @model_validator(mode='after')
     def validation(self):
-        if not any([self.content, self.term_content]):
+        if not any([self.content, self.term_content_id]):
             raise ValueError('you need to provied at least one content ref.')
-        if all([self.content, self.term_content]):
+        if all([self.content, self.term_content_id]):
             raise ValueError(
-                'you cannot reference two values at once (content, term_content).'
+                'you cannot reference two values at once (content, term_content_id).'
             )
         return self
 
 
 class TermLexicalView(BaseModel):
     id: int
+    term_id: int
     content: str | None = Field(examples=['Lar'], default=None, max_length=256)
     term_content_id: int | None = None
     type: constants.TermLexicalType
+    additional_content: dict | None = Field(
+        default=None,
+        examples=[{'syllable': ['ca', 'sa'], 'part': 'en'}],
+    )
 
 
 class TermLexicalFilter(BaseModel):
     term_id: int
-    type: constants.TermLexicalType | None = None
+    type: constants.TermLexicalType
 
 
 class TermImageSchema(BaseModel):
@@ -84,6 +89,7 @@ class TermImageSchema(BaseModel):
 
 class TermImageView(BaseModel):
     id: int
+    term_id: int
     image_url: str = Field(
         default=None,
         examples=['https://mylink.com/my-image.svg'],
@@ -189,7 +195,7 @@ class TermExampleView(BaseModel):
     )
 
 
-class TermExampleTranslationSchema(TermExampleLinkSchema):
+class TermExampleTranslationSchema(BaseModel):
     term_example_id: int
     language: constants.Language
     translation: str = Field(
@@ -199,6 +205,7 @@ class TermExampleTranslationSchema(TermExampleLinkSchema):
 
 class TermExampleTranslationView(BaseModel):
     language: constants.Language
+    term_example_id: int
     translation: str = Field(
         examples=['Ontem eu almoçei na casa da minha mãe.'], max_length=256
     )
@@ -221,6 +228,8 @@ class TermDefinitionSchema(BaseModel):
 
 class TermDefinitionView(BaseModel):
     id: int
+    term_id: int
+    term_lexical_id: int | None = None
     part_of_speech: constants.PartOfSpeech = Field(examples=(['noun']))
     content: str = Field(
         examples=['Set of walls, rooms, and roof with specific purpose of habitation.'],
@@ -256,6 +265,7 @@ class TermDefinitionTranslationSchema(BaseModel):
 
 class TermDefinitionTranslationView(BaseModel):
     language: constants.Language
+    term_definition_id: int
     meaning: str = Field(examples=['Casa, lar'], max_length=256)
     translation: str = Field(
         examples=['Conjunto de parades, quartos e teto com a finalidade de habitação.'],
@@ -264,7 +274,7 @@ class TermDefinitionTranslationView(BaseModel):
 
 
 class TermMeaningView(BaseModel):
-    meaning: list[str] = Field(examples=[['casa', 'ave', 'test']])
+    meanings: list[str] = Field(examples=[['casa', 'ave', 'test']])
 
 
 class TermPronunciationLinkSchema(BaseModel):
@@ -322,7 +332,7 @@ class TermPronunciationSchema(TermPronunciationLinkSchema):
         return audio_url
 
 
-class TermPronunciationView(BaseModel):
+class TermPronunciationView(TermPronunciationLinkSchema):
     id: int
     phonetic: str = Field(examples=['/ˈhaʊ.zɪz/'])
     audio_url: str | None = Field(
