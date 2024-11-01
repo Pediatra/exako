@@ -15,13 +15,33 @@ from exako.auth import current_admin_user
 from exako.core import schema as core_schema
 from exako.core.pagination import Page
 
-term_router = APIRouter()
+term_router = APIRouter(tags=['term'])
 
-term_router.include_router(lexical_router, prefix='/lexical')
-term_router.include_router(pronunciation_router, prefix='/pronunciation')
-term_router.include_router(example_router, prefix='/example')
-term_router.include_router(definition_router, prefix='/definition')
-term_router.include_router(image_router, prefix='/image')
+term_router.include_router(
+    lexical_router,
+    prefix='/lexical',
+    tags=['lexical'],
+)
+term_router.include_router(
+    pronunciation_router,
+    prefix='/pronunciation',
+    tags=['pronunciation'],
+)
+term_router.include_router(
+    example_router,
+    prefix='/example',
+    tags=['example'],
+)
+term_router.include_router(
+    definition_router,
+    prefix='/definition',
+    tags=['definition'],
+)
+term_router.include_router(
+    image_router,
+    prefix='/image',
+    tags=['image'],
+)
 
 
 @term_router.post(

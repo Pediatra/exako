@@ -6,12 +6,16 @@ OBJECT_NOT_FOUND = {
     },
 }
 
-PERMISSION_DENIED = {
+NOT_AUTHENTICATED = {
     status.HTTP_401_UNAUTHORIZED: {
         'content': {
             'application/json': {'example': {'detail': 'invalid credentials.'}}
         },
     },
+}
+
+PERMISSION_DENIED = {
+    **NOT_AUTHENTICATED,
     status.HTTP_403_FORBIDDEN: {
         'content': {
             'application/json': {'example': {'detail': 'not enough permissions.'}}
